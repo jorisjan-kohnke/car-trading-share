@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auction.ai — Architectuurplaat Fase 1</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#1a2235; --panel2:#212b44; --border:#2e3a58;
+    --txt:#e8edf7; --muted:#93a0bc; --accent:#4f8ef7; --green:#34c98e;
+    --amber:#f5b942; --red:#f56262; --purple:#a78bfa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);line-height:1.55;padding:32px 24px 80px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:1.9rem;margin-bottom:4px}
+  h2{font-size:1.3rem;margin:48px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--border);color:var(--accent)}
+  h3{font-size:1.02rem;margin:18px 0 8px}
+  p.lead{color:var(--muted);margin-bottom:6px}
+  .badge{display:inline-block;font-size:.7rem;font-weight:600;padding:2px 9px;border-radius:10px;margin-left:6px;vertical-align:middle}
+  .b-green{background:#123528;color:var(--green)} .b-amber{background:#3a2f14;color:var(--amber)}
+  .b-red{background:#3a1a1a;color:var(--red)} .b-blue{background:#16294a;color:var(--accent)}
+  .b-purple{background:#2a2246;color:var(--purple)}
+  table{width:100%;border-collapse:collapse;margin:10px 0 6px;font-size:.86rem}
+  th{background:var(--panel2);text-align:left;padding:8px 10px;border:1px solid var(--border);font-weight:600}
+  td{padding:7px 10px;border:1px solid var(--border);vertical-align:top}
+  tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:.82em;color:#9ecbff}
+  .note{background:var(--panel);border-left:3px solid var(--amber);padding:10px 14px;border-radius:6px;font-size:.86rem;color:var(--muted);margin:12px 0}
+  .note.red{border-left-color:var(--red)}
+  .note b{color:var(--txt)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:860px){.cols{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+  .card h3{margin-top:0}
+  ul{margin:6px 0 6px 20px;font-size:.88rem} li{margin:3px 0}
+  .muted{color:var(--muted)}
+  /* diagram */
+  .diagram{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:26px 20px;overflow-x:auto}
+  .lane{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:start;margin-bottom:18px}
+  .lane-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:14px}
+  .lane-boxes{display:flex;gap:14px;flex-wrap:wrap}
+  .box{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;min-width:180px;flex:1}
+  .box .t{font-weight:600;font-size:.9rem}
+  .box .s{font-size:.76rem;color:var(--muted);margin-top:3px}
+  .box.src{border-top:3px solid var(--accent)}
+  .box.ing{border-top:3px solid var(--purple)}
+  .box.db{border-top:3px solid var(--green)}
+  .box.eng{border-top:3px solid var(--amber)}
+  .box.ui{border-top:3px solid var(--red)}
+  .flow-arrow{text-align:center;color:var(--muted);font-size:1.1rem;margin:-6px 0 -6px 164px}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:.78rem;color:var(--muted)}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+  footer{margin-top:56px;font-size:.75rem;color:var(--muted);border-top:1px solid var(--border);padding-top:14px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Auction.ai — Architectuurplaat <span class="badge b-blue">Fase 1 — Prototype</span></h1>
+<p class="lead">Van BCA-veilingaanbod naar gescoorde koop-deals, gevalideerd met Autotrader-retaildata. Versie 1.0 — 15 juli 2026.</p>
+
+<!-- ══════════════ 1. OVERZICHT ══════════════ -->
+<h2>1. Architectuuroverzicht</h2>
+<div class="diagram">
+  <div class="lane">
+    <div class="lane-label">Bronnen</div>
+    <div class="lane-boxes">
+      <div class="box src"><div class="t">BCA (bca.co.uk)</div><div class="s">Veilingaanbod, lot-pagina's, CAP HPI guide pricing, condition report PDF's. Geen open API → scraping via ingelogde Chrome-sessie.</div></div>
+      <div class="box src"><div class="t">Autotrader UK</div><div class="s">Retailprijzen &amp; marktdata. PoC: scraping. Fase 1 definitief: <b>Auto Trader Connect API</b> (valuations, Retail Rating, Days to Sell) op kenteken + km.</div></div>
+      <div class="box src"><div class="t">Kosten-benchmarks</div><div class="s">Online richtprijzen herstel/transport/opslag + eigen realisatiedata (zelflerend). Gebruiker kan alles overschrijven.</div></div>
+    </div>
+  </div>
+  <div class="flow-arrow">▼</div>
+  <div class="lane">
+    <div class="lane-label">Inwinning</div>
+    <div class="lane-boxes">
+      <div class="box ing"><div class="t">BCA-sync (dagelijks ~07:15)</div><div class="s">Scrape gefilterde zoek-URL → diff (nieuw/verdwenen) → verrijk alléén nieuwe: lot-data + condition-PDF. Skills: <code>bca-auction-sync</code>, <code>bca-deal-scout</code>.</div></div>
+      <div class="box ing"><div class="t">AT-bench per voertuig</div><div class="s">Per kenteken: valuation-call (VRM + mileage) → retail/trade-waarde, Retail Rating, Days to Sell. Trigger: na verrijking van elke nieuwe auto.</div></div>
+    </div>
+  </div>
+  <div class="flow-arrow">▼</div>
+  <div class="lane">
+    <div class="lane-label">Opslag</div>
+    <div class="lane-boxes">
+      <div class="box db"><div class="t">Supabase (project Auction.ai)</div><div class="s"><code>auction_vehicles</code> · <code>vehicle_equipment</code> · <code>condition_damage</code> · <code>vehicle_images</code> · <code>at_vehicle</code> · <code>autotrader_matches</code> · <code>deal_candidates</code> + nieuw: <code>cost_config</code> · <code>repair_cost_model</code> · <code>deal_scores</code></div></div>
+    </div>
+  </div>
+  <div class="flow-arrow">▼</div>
+  <div class="lane">
+    <div class="lane-label">Verwerking</div>
+    <div class="lane-boxes">
+      <div class="box eng"><div class="t">Kostenmodel</div><div class="s">Schadeherstel per (onderdeel × type × ernst), fees, transport, opslag, recon. Defaults uit benchmarks; overschrijfbaar; zelflerend uit realisaties.</div></div>
+      <div class="box eng"><div class="t">Scoring-engine</div><div class="s">Netto marge = AT-retail − (all-in inkoop + herstel + logistiek). Deal-score 0–100 uit marge%, Days to Sell, Retail Rating, risico (grade/declaraties).</div></div>
+    </div>
+  </div>
+  <div class="flow-arrow">▼</div>
+  <div class="lane">
+    <div class="lane-label">Presentatie</div>
+    <div class="lane-boxes">
+      <div class="box ui"><div class="t">Scoring-dashboard (HTML)</div><div class="s">Ranglijst deals, detailkaart per auto (marge-opbouw, schades, AT-bench), filters, kosten-instellingen. Koop/bied blijft altijd handmatig.</div></div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--accent)"></span>Bron</span>
+    <span><span class="dot" style="background:var(--purple)"></span>Inwinning</span>
+    <span><span class="dot" style="background:var(--green)"></span>Opslag</span>
+    <span><span class="dot" style="background:var(--amber)"></span>Verwerking</span>
+    <span><span class="dot" style="background:var(--red)"></span>Presentatie</span>
+  </div>
+</div>
+
+<!-- ══════════════ 2. BRONNEN ══════════════ -->
+<h2>2. Bronnen &amp; uitleesmethode</h2>
+<table>
+  <tr><th>Bron</th><th>Methode</th><th>Wat</th><th>Frequentie</th><th>Status</th></tr>
+  <tr>
+    <td><b>BCA zoeklijst</b></td>
+    <td>Scraping, ingelogde Chrome (geen open API). Gefilterde <code>bq</code>-URL: benzine/hybride · automaat · ≤80.000 mi · 0 mnd–8 jr · CAP clean ≤ £16.000</td>
+    <td>Basisrecord per lot (reg, make, title, jaar, km, cap_clean, veiling, locatie)</td>
+    <td>Dagelijks, incrementeel (diff: nieuw toevoegen, verdwenen afmelden)</td>
+    <td><span class="badge b-green">werkt (PoC)</span></td>
+  </tr>
+  <tr>
+    <td><b>BCA lot-pagina</b></td>
+    <td>Scraping <code>bca.co.uk/lot/{reg}</code></td>
+    <td>Grade, spec, service, MOT, declaraties, CAP HPI (new/retail/clean/average/below), equipment, docId</td>
+    <td>Eenmalig per nieuwe auto (~10–12 s/auto)</td>
+    <td><span class="badge b-green">werkt (PoC)</span></td>
+  </tr>
+  <tr>
+    <td><b>BCA condition report</b></td>
+    <td>Document-URL met docId → 302 naar gesigneerde Azure-PDF → tekst-parsen</td>
+    <td>Schaderegels (area / onderdeel / type / ernst), report grade, appraised-datum</td>
+    <td>Eenmalig per nieuwe auto</td>
+    <td><span class="badge b-green">werkt (PoC)</span></td>
+  </tr>
+  <tr>
+    <td><b>Autotrader UK</b></td>
+    <td>PoC: scraping zoekresultaten. <b>Fase 1 definitief: Auto Trader Connect API</b> — valuation op VRM + mileage; Vehicle Metrics (Retail Rating, Days to Sell)</td>
+    <td>Retail- &amp; trade-valuation, Retail Rating, Days to Sell, evt. Competitor View</td>
+    <td>Per nieuwe auto + wekelijkse refresh actieve voorraad</td>
+    <td><span class="badge b-amber">API-toegang regelen</span></td>
+  </tr>
+  <tr>
+    <td><b>Kosten-benchmarks</b></td>
+    <td>Handmatig onderzocht + periodiek herijken; later zelflerend uit eigen realisaties</td>
+    <td>Herstelkosten per schadetype, transport, opslag, BCA-fees</td>
+    <td>Config; kwartaal-herijking</td>
+    <td><span class="badge b-blue">startwaarden in §5</span></td>
+  </tr>
+</table>
+<div class="note"><b>Beslispunt Autotrader API.</b> Auto Trader Connect is een add-on op een adverteerderscontract (retailer-account vereist; chargeable). Grote winst t.o.v. scraping: je matcht op <b>kenteken (VRM) + km</b> in plaats van fuzzy op make/model/jaar — exacter, sneller, ToS-proof. Alternatief bij geen toegang: reseller via One Auto API, of scraping als tijdelijke fallback houden.</div>
+
+<!-- ══════════════ 3. DATAMODEL ══════════════ -->
+<h2>3. Dataopslag (Supabase)</h2>
+<h3>Bestaand (ist)</h3>
+<table>
+  <tr><th>Tabel</th><th>Inhoud</th><th>Sleutel</th><th>Rijen nu</th></tr>
+  <tr><td><code>auction_vehicles</code></td><td>Volledige gefilterde BCA-voorraad, base + verrijking, status active/sold_or_removed</td><td><code>reg</code></td><td>208</td></tr>
+  <tr><td><code>vehicle_equipment</code></td><td>Uitrusting per auto (genormaliseerd)</td><td>reg + item</td><td>6</td></tr>
+  <tr><td><code>condition_damage</code></td><td>Schaderegels uit condition report: area, part, type, severity, severity_mm, is_replacement</td><td>reg + regel</td><td>4</td></tr>
+  <tr><td><code>vehicle_images</code></td><td>Foto-URL's per lot</td><td>reg + url</td><td>465</td></tr>
+  <tr><td><code>deal_candidates</code></td><td>Platte bench-tabel per batch (basis + verrijking + condition + AT-velden)</td><td><code>reg</code></td><td>30</td></tr>
+  <tr><td><code>at_vehicle</code></td><td>Autotrader-referentiedata (PoC-scraping)</td><td>reg/listing</td><td>30</td></tr>
+  <tr><td><code>autotrader_matches</code></td><td>Match-resultaten BCA ↔ AT-listings</td><td>reg + listing</td><td>0</td></tr>
+</table>
+<h3>Nieuw voor fase 1 (soll)</h3>
+<table>
+  <tr><th>Tabel</th><th>Doel</th><th>Kernkolommen</th></tr>
+  <tr><td><code>cost_config</code></td><td>Alle niet-schade kostenposten als configureerbare parameters (default + user-override)</td><td>cost_key, label, default_value_gbp, user_value_gbp, unit (per_car/per_mile/per_day/%), source_url, updated_at</td></tr>
+  <tr><td><code>repair_cost_model</code></td><td>Herstelkosten per schadecategorie; basis voor het zelflerende model</td><td>part_group, damage_type, severity_band, default_cost_gbp, user_cost_gbp, learned_cost_gbp, n_observations, updated_at</td></tr>
+  <tr><td><code>repair_actuals</code></td><td>Werkelijke herstelkosten van gekochte auto's (feedback-loop → learned_cost)</td><td>reg, part_group, damage_type, severity_band, actual_cost_gbp, invoice_ref, date</td></tr>
+  <tr><td><code>deal_scores</code></td><td>Berekende score per auto per run (historie behouden voor model-evaluatie)</td><td>reg, run_at, at_retail_gbp, total_cost_gbp, est_net_margin_gbp, margin_pct, days_to_sell, retail_rating, risk_flags, deal_score</td></tr>
+</table>
+<div class="note red"><b>Security — nu fixen.</b> Alle 7 tabellen hebben Row Level Security <b>uit</b>: iedereen met de anon-key kan alles lezen én schrijven. Voor fase 1 (single user, geen client-side anon-key in productie) beheersbaar, maar zet RLS aan met een simpele policy zodra het dashboard direct met de anon-key praat. Niet blind <code>ENABLE ROW LEVEL SECURITY</code> draaien zonder policies — dan blokkeert alles.</div>
+
+<!-- ══════════════ 4. MINIMALE VELDEN & MATCHING ══════════════ -->
+<h2>4. Minimale dataset &amp; matching</h2>
+<div class="cols">
+  <div class="card">
+    <h3>Minimaal nodig om het model te laten draaien</h3>
+    <ul>
+      <li><b>Identiteit:</b> <code>reg</code> (VRM — dé matchsleutel), make, model/derivative, year/plate, date_registered</li>
+      <li><b>Waardering inkoop:</b> <code>cap_clean_gbp</code> (bied-anker), cap_retail_gbp, verwachte hamerprijs</li>
+      <li><b>Staat:</b> grade, schaderegels (part, type, severity), declarations, MOT, service-historie, aantal sleutels, logbook</li>
+      <li><b>Gebruik:</b> mileage + mileage_status, owners, fuel, transmission</li>
+      <li><b>Verkoopzijde (AT):</b> retail-valuation, trade-valuation, Days to Sell, Retail Rating</li>
+      <li><b>Logistiek:</b> veilinglocatie (voor transportafstand), sale_datetime</li>
+      <li><b>Kosten:</b> volledige <code>cost_config</code> + <code>repair_cost_model</code> gevuld</li>
+    </ul>
+    <p class="muted" style="font-size:.82rem;margin-top:8px">Zonder deze velden geen score; alles daarbuiten (equipment, foto's, CO₂) is verrijking voor de detailweergave.</p>
+  </div>
+  <div class="card">
+    <h3>Waarop matchen we BCA ↔ Autotrader?</h3>
+    <ul>
+      <li><b>Primair (API, fase 1):</b> exact op <code>VRM + mileage</code> → Auto Trader Connect geeft direct de valuation voor déze auto. Geen fuzzy matching nodig.</li>
+      <li><b>Fallback (scraping/PoC):</b> make + model + derivative-trefwoorden + bouwjaar ±1 + km-band ±15% + fuel + transmission → mediaan van ≥5 listings; bij &lt;5 listings band verbreden en <code>match_confidence</code> verlagen.</li>
+      <li><b>Conditie-correctie:</b> AT-valuation is "retail ready" → schadekosten worden dus <i>niet</i> dubbel geteld: herstel zit aan de kostenkant, niet als korting op de verkoopwaarde.</li>
+      <li><b>Vastleggen:</b> match-methode + confidence altijd opslaan in <code>deal_scores.risk_flags</code> / <code>autotrader_matches</code>.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════ 5. KOSTENMODEL ══════════════ -->
+<h2>5. Kostenmodel — startwaarden (onderzocht, overschrijfbaar)</h2>
+<p class="muted" style="font-size:.86rem">Alle bedragen zijn UK-richtprijzen medio 2026, excl. VAT tenzij anders vermeld. Bedoeld als default in <code>cost_config</code> / <code>repair_cost_model</code>; de gebruiker past aan, en het schade-deel leert bij uit <code>repair_actuals</code>.</p>
+<h3>5a. Vaste &amp; transactiekosten (→ <code>cost_config</code>)</h3>
+<table>
+  <tr><th>Kostenpost</th><th>Startwaarde</th><th>Eenheid</th><th>Toelichting / bron</th></tr>
+  <tr><td>BCA buyer fee</td><td>staffel naar hamerprijs; reken ~£300–£500 all-in bij £5–15k incl. online fee + VAT op fees</td><td>per auto</td><td>Officiële rate card (Blue/Silver/Gold); exacte staffel als lookup-tabel inladen</td></tr>
+  <tr><td>BCA Assured</td><td>£45 + VAT (≈£54)</td><td>per auto</td><td>Optioneel, auto's &lt;8 jr &amp; &lt;100k mi</td></tr>
+  <tr><td>V5C admin</td><td>£21,67 + VAT (≈£26)</td><td>per auto</td><td>BCA-administratie</td></tr>
+  <tr><td>Transport (trade plate)</td><td>£0,70–£1,00 / mijl, min. ~£100</td><td>per mijl</td><td>Rijklare auto's; transporter £1,50–£2,50/mijl als alternatief</td></tr>
+  <tr><td>Opslag BCA (na ~4 dgn)</td><td>£20–£30 / dag</td><td>per dag</td><td>Punitief — snel ophalen is een harde procesregel</td></tr>
+  <tr><td>Eigen stalling tot verkoop</td><td>£3–£5 / dag (aanname)</td><td>per dag × Days to Sell</td><td>Gebruiker vult eigen tarief in; gekoppeld aan AT Days to Sell</td></tr>
+  <tr><td>Recon basis (valet, MOT-check, kleine service)</td><td>£150–£250</td><td>per auto</td><td>Standaard retail-ready-pakket, altijd meerekenen</td></tr>
+  <tr><td>Rentekosten voorraad</td><td>~1% van inkoop / mnd (aanname)</td><td>per maand</td><td>Optioneel in fase 1</td></tr>
+</table>
+<h3>5b. Schadeherstel (→ <code>repair_cost_model</code>, zelflerend)</h3>
+<table>
+  <tr><th>Schadecategorie (part_group × type)</th><th>Licht</th><th>Middel</th><th>Zwaar / vervangen</th></tr>
+  <tr><td>Bumperschade (scuff → respray)</td><td>£50–£100</td><td>£190</td><td>£280–£350</td></tr>
+  <tr><td>Paneelkras / lakschade per paneel</td><td>£78 (clearcoat)</td><td>£220 (single panel)</td><td>£335+ (diep/meerdere lagen)</td></tr>
+  <tr><td>Deuk (PDR / dent+paint)</td><td>£60–£100</td><td>£150–£250</td><td>paneel vervangen: onderdeel + arbeid</td></tr>
+  <tr><td>Velg (refurb per wiel)</td><td>£50</td><td>£90</td><td>£120 / vervangen</td></tr>
+  <tr><td>Ruitschade</td><td>chip £50–£80</td><td colspan="2">vervangen £200–£400</td></tr>
+  <tr><td>Interieur (brandgat, trim, bekleding)</td><td>£40–£80</td><td>£100–£200</td><td>onderdeelprijs</td></tr>
+</table>
+<div class="note"><b>Zelflerende loop.</b> Kostenraming per auto = Σ over schaderegels: lookup (part_group, damage_type, severity_band) → <code>user_cost ?? learned_cost ?? default_cost</code>. Na herstel schrijft de gebruiker de factuurbedragen in <code>repair_actuals</code>; vanaf n ≥ 5 observaties per cel wordt <code>learned_cost</code> (voortschrijdend gemiddelde) de nieuwe default. Zo convergeert het model naar jouw werkelijke herstelpartner-prijzen.</div>
+
+<!-- ══════════════ 6. SCORING ══════════════ -->
+<h2>6. Scoringsmodel</h2>
+<div class="card">
+  <p style="font-size:.9rem"><b>Netto marge</b> = AT-retail-valuation − (verwachte hamerprijs + BCA-fees + herstelkosten + transport + opslag + recon)</p>
+  <p style="font-size:.9rem;margin-top:6px"><b>Deal-score (0–100)</b> = gewogen som van: marge% t.o.v. inkoop (40%), Days to Sell — sneller is beter (25%), Retail Rating (20%), risico-aftrek (15%: lage grade, declaraties, ontbrekende service-historie, mileage_status ≠ warranted, lage match_confidence).</p>
+  <p class="muted" style="font-size:.82rem;margin-top:8px">Gewichten zijn config (in <code>cost_config</code> of aparte <code>score_weights</code>), zodat we ze kunnen kalibreren zodra er realisaties zijn. Verwachte hamerprijs fase 1 = cap_clean (conservatief); later leren uit werkelijke sold-prijzen.</p>
+</div>
+
+<!-- ══════════════ 7. SCOPE ══════════════ -->
+<h2>7. Fase 1 — wat wel, wat niet</h2>
+<div class="cols">
+  <div class="card">
+    <h3>✅ In scope fase 1</h3>
+    <ul>
+      <li>Dagelijkse incrementele BCA-sync op de vaste filter (bestaande skills)</li>
+      <li>Volledige verrijking van nieuwe auto's incl. condition report</li>
+      <li>Autotrader Connect API: valuation + Days to Sell + Retail Rating per VRM (scraping alleen als tijdelijke fallback)</li>
+      <li>Kostenmodel met onderzochte defaults + user-override (UI in dashboard)</li>
+      <li>Zelflerende schadekosten: structuur + invoer realisaties (het "leren" is simpel gemiddelde, geen ML)</li>
+      <li>Scoring-engine + ranglijst-dashboard (HTML) op Supabase</li>
+      <li>RLS aanzetten met basispolicy zodra dashboard live gaat</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>⛔ Bewust buiten scope fase 1</h3>
+    <ul>
+      <li>Automatisch bieden/kopen — blijft altijd handmatig</li>
+      <li>NL-import (BPM, RDW, transport UK→NL) — model is UK-in/UK-uit; import is fase 2-module</li>
+      <li>Meerdere veilingbronnen (Manheim, Copart) — architectuur houdt er rekening mee (bron-kolom), bouwen niet</li>
+      <li>ML-prijsvoorspelling hamerprijs — eerst data verzamelen uit sold-lots</li>
+      <li>Multi-user, rollen, notificaties/alerts</li>
+      <li>Foto-analyse van schades (AI-vision) — condition report PDF is fase 1 de waarheid</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══════════════ 8. RISICO'S ══════════════ -->
+<h2>8. Openstaande beslispunten &amp; risico's</h2>
+<table>
+  <tr><th>#</th><th>Punt</th><th>Impact</th><th>Actie</th></tr>
+  <tr><td>1</td><td>Auto Trader Connect-toegang (adverteerderscontract + add-on-kosten)</td><td>Kern van de validatiekant</td><td>Offerte/toegang aanvragen; One Auto API als reseller-alternatief checken</td></tr>
+  <tr><td>2</td><td>BCA-scraping: ToS + Cloudflare/auth0-sessie</td><td>Continuïteit inwinning</td><td>Laag volume/tempo houden; incrementeel blijven; BCA Partner-API informeren</td></tr>
+  <tr><td>3</td><td>RLS uit op alle tabellen</td><td>Security</td><td>Policies definiëren vóór dashboard-livegang</td></tr>
+  <tr><td>4</td><td>Verwachte hamerprijs = cap_clean is conservatief</td><td>Scores mogelijk te somber/rooskleurig</td><td>Sold-prijzen loggen en kalibreren</td></tr>
+  <tr><td>5</td><td>BCA-fee-staffel exact</td><td>Marge-precisie (±£100)</td><td>Officiële rate card als lookup-tabel in <code>cost_config</code> laden</td></tr>
+</table>
+
+<footer>
+  Bronnen kostenstartwaarden &amp; API: Auto Trader Connect (autotrader.co.uk/partners, help.autotrader.co.uk — Current Valuations, Vehicle Metrics, Retail Rating), One Auto API, BCA Buyers Fee rate cards (bca.co.uk) &amp; carauctionfees.co.uk, SMART-repairprijzen (checkatrade.com, djautobodyrepair.co.uk, howmuchshoulditcost.co.uk), transport (delivermymotor.com, airtasker.com, cdscarmovements.co.uk). Richtprijzen medio 2026 — herijk per kwartaal.
+</footer>
+</div>
+</body>
+</html>
