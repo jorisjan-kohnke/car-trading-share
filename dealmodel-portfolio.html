@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auction.ai — Deal Portfolio (echte AT-data)</title>
+<style>
+  :root{
+    --bg:#0e1116;--panel:#161b23;--panel2:#1c222c;--line:#2a323f;
+    --txt:#e6eaf0;--mut:#8d99ab;--acc:#4da3ff;--grn:#3ecf8e;--amb:#f0b429;--red:#f2545b;--pur:#a78bfa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;padding:22px}
+  a{color:var(--acc);cursor:pointer}
+  h1{font-size:20px;margin:0 0 2px}
+  .sub{color:var(--mut);font-size:12.5px;margin-bottom:16px}
+  .sub b{color:var(--txt)}
+  .hidden{display:none}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 14px;min-width:88px}
+  .stat b{display:block;font-size:19px;font-variant-numeric:tabular-nums;line-height:1.25}
+  .stat span{font-size:11px;color:var(--mut)}
+  .stat.g b{color:var(--grn)} .stat.a b{color:var(--amb)} .stat.r b{color:var(--red)}
+  .assume{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+  .assume h3{margin:0 0 10px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+  .assume .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .ac .top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:1px}
+  .ac .top .v{color:var(--acc);font-weight:600;font-variant-numeric:tabular-nums}
+  .ac input{width:100%;accent-color:var(--acc)}
+  .ac .h{font-size:10px;color:var(--mut)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  select{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:6px 9px;font-size:12.5px}
+  .controls label{font-size:11px;color:var(--mut);margin-right:3px}
+  .tblwrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:900px}
+  th,td{padding:8px 10px;font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{color:var(--mut);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--panel)}
+  th:hover{color:var(--txt)}
+  td:first-child,th:first-child,td.l,th.l{text-align:left}
+  #tbl tbody tr{cursor:pointer}
+  #tbl tbody tr:hover{background:var(--panel2)}
+  .car-t{font-weight:600}.car-s{color:var(--mut);font-size:11px}
+  .badge{display:inline-block;padding:0 5px;border-radius:4px;font-size:9px;font-weight:700;vertical-align:middle;margin-left:4px}
+  .b-adj{background:rgba(62,207,142,.16);color:var(--grn)}
+  .b-mkt{background:rgba(240,180,41,.16);color:var(--amb)}
+  .ratewrap{display:inline-flex;align-items:center;gap:5px;justify-content:flex-end}
+  .ratebar{width:34px;height:6px;border-radius:3px;background:var(--line);position:relative}
+  .ratebar i{position:absolute;left:0;top:0;height:100%;border-radius:3px}
+  .gradebadge{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;border-radius:5px;font-weight:700;font-size:11px}
+  .scorebar{display:inline-block;width:40px;height:6px;border-radius:3px;background:var(--line);position:relative;vertical-align:middle;margin-left:6px}
+  .scorebar i{position:absolute;left:0;top:0;height:100%;border-radius:3px}
+  .note{font-size:11px;color:var(--mut);margin-top:10px;line-height:1.55}
+  .win-banner{background:rgba(62,207,142,.07);border:1px solid rgba(62,207,142,.28);border-left:3px solid var(--grn);border-radius:8px;padding:9px 13px;font-size:12px;margin-bottom:16px}
+  .win-banner b{color:var(--txt)}
+  /* ---- detail (opzet van dealmodel-calculator.html) ---- */
+  #detail .back{font-size:13px;margin-bottom:14px;display:inline-block}
+  .grid{display:grid;grid-template-columns:330px 1fr;gap:18px}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .panel h3{margin:0 0 12px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+  .field{margin:11px 0}
+  .field .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px}
+  .field .top .v{color:var(--acc);font-weight:600;font-variant-numeric:tabular-nums}
+  .field input[type=range]{width:100%;accent-color:var(--acc)}
+  .field .h{font-size:11px;color:var(--mut)}
+  .field .h.warn{color:var(--amb)}
+  .car{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:12.5px;line-height:1.65}
+  .car b{color:var(--txt)}.car .m{color:var(--mut)}
+  .thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .thumbs img{width:70px;height:53px;object-fit:cover;border-radius:6px;border:1px solid var(--line);background:var(--panel2)}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+  .mini{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px;text-align:center}
+  .mini .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+  .mini .val{font-size:17px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+  .verdict{border-radius:10px;padding:13px 15px;margin-bottom:14px;font-size:13.5px;font-weight:600;border:1px solid}
+  .verdict.go{background:rgba(62,207,142,.1);border-color:rgba(62,207,142,.4);color:var(--grn)}
+  .verdict.no{background:rgba(242,84,91,.1);border-color:rgba(242,84,91,.4);color:var(--red)}
+  .verdict.marg{background:rgba(240,180,41,.1);border-color:rgba(240,180,41,.4);color:var(--amb)}
+  .verdict small{display:block;font-weight:400;color:var(--mut);margin-top:4px;font-size:12px}
+  .stackline{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:var(--mut)}
+  .stackline b{color:var(--txt);font-variant-numeric:tabular-nums}
+  .stackline.sub2{border-top:1px solid var(--line);padding-top:6px;color:var(--txt)}
+  .stackline.tot{border-top:2px solid var(--line);margin-top:5px;padding-top:7px;color:var(--txt);font-weight:600;font-size:13.5px}
+  #d_tbl{min-width:0}
+  #d_tbl th{position:static}
+  .pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700}
+  .c-high{background:rgba(62,207,142,.16);color:var(--grn)}
+  .c-med{background:rgba(77,163,255,.16);color:var(--acc)}
+  .c-low{background:rgba(240,180,41,.16);color:var(--amb)}
+  .c-miss{background:rgba(242,84,91,.16);color:var(--red)}
+  .c-out{background:rgba(141,153,171,.14);color:var(--mut)}
+  .p-great{background:rgba(62,207,142,.15);color:var(--grn)}
+  .p-good{background:rgba(77,163,255,.15);color:var(--acc)}
+  .p-fair{background:rgba(240,180,41,.15);color:var(--amb)}
+  .p-out{background:rgba(141,153,171,.15);color:var(--mut)}
+  canvas{width:100%;height:200px;margin-top:6px}
+  .apimap{font-size:11px;color:var(--mut);line-height:1.7}
+  .apimap code{background:#0b0e13;border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--pur);font-family:ui-monospace,Menlo,monospace;font-size:10.5px}
+  .apimap b{color:var(--txt)}
+  /* ---- info tooltips ---- */
+  .info{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;border-radius:50%;background:var(--line);color:var(--mut);font-size:9px;font-style:normal;font-weight:700;cursor:help;margin-left:5px;vertical-align:middle}
+  .info:hover{background:var(--acc);color:#0e1116}
+  th .info{margin-left:4px}
+  #tip{position:fixed;z-index:9999;max-width:290px;background:#0b0e13;border:1px solid #37414f;border-radius:8px;padding:9px 11px;font-size:11.5px;line-height:1.55;color:var(--txt);box-shadow:0 8px 28px rgba(0,0,0,.55);pointer-events:none;opacity:0;display:none;text-align:left;font-weight:400;text-transform:none;letter-spacing:0}
+  #tip.show{opacity:1;display:block}
+  #tip b{color:var(--acc)}
+  #tip .form{color:var(--grn);font-family:ui-monospace,Menlo,monospace;font-size:10.5px}
+</style>
+</head>
+<body>
+<div id="tip"></div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="dashboard">
+  <h1>Auction.ai — deal portfolio <span style="color:var(--grn);font-weight:400;font-size:15px">● echte Autotrader-data</span></h1>
+  <div class="sub">30 kandidaten uit <b>deal_candidates</b>, gebencht tegen het Autotrader dealer portal (15-07-2026). Klik een rij voor het dealmodel per auto.</div>
+
+  <div class="win-banner">✅ <b>Alle 30 opgehaald via het portal</b> (retail valuation, days-to-sell, retail rating, price indicator, supply/demand). <b>19</b> mileage+spec-adjusted <span class="badge b-adj">ADJ</span>, <b>11</b> markt-gemiddelde <span class="badge b-mkt">MKT</span> (niet mileage-gecorrigeerd). Recon &amp; buyer's fee blijven placeholders.</div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="assume">
+    <h3>Globale aannames — herrekenen alle 30</h3>
+    <div class="wrap">
+      <div class="ac"><div class="top"><span>Recon per schaderegel <span class="info" data-tip="Recon = aantal schaderegels × dit bedrag (+ grade-penalty). <b>Placeholder</b>: wordt vervangen door recon-kosten per schadetype/ernst uit het condition report.">i</span></span><span class="v" id="l_rp">£45</span></div><input type="range" id="rp" min="0" max="120" step="5" value="45"><div class="h">⏳ placeholder tot recon-logica.</div></div>
+      <div class="ac"><div class="top"><span>Grade-penalty (3/4) <span class="info" data-tip="Aan = extra recon-buffer bovenop de per-schaderegel kosten: grade 2 +£150, grade 3 +£400, grade 4 +£700. Vangt de hogere onzekerheid bij slechte grades.">i</span></span><span class="v" id="l_gp">aan</span></div><input type="range" id="gp" min="0" max="1" step="1" value="1"><div class="h">Extra recon-buffer grade 3/4.</div></div>
+      <div class="ac"><div class="top"><span>Vaste kosten <span class="info" data-tip="Buyer's fee + transport + prep/valet/MOT, samengenomen per auto. <b>Placeholder</b> tot de BCA buyer's-fee-staffel bekend is. In de detailpagina apart instelbaar.">i</span></span><span class="v" id="l_fx">£800</span></div><input type="range" id="fx" min="0" max="2000" step="50" value="800"><div class="h">Fee + transport + prep (⏳).</div></div>
+      <div class="ac"><div class="top"><span>Holding / dag <span class="info" data-tip="Kosten per dag standtijd (kapitaal + afschrijving), vermenigvuldigd met de AT days-to-sell van elke auto. In de detailpagina gesplitst in kapitaal/dag en afschrijving/maand.">i</span></span><span class="v" id="l_hd">£11</span></div><input type="range" id="hd" min="0" max="40" step="1" value="11"><div class="h">Kapitaal + afschrijving.</div></div>
+      <div class="ac"><div class="top"><span>Marge-drempel (go) <span class="info" data-tip="Go/no-go grens. Netto marge ≥ drempel = <b>groen</b> (winstgevend); 0–drempel = geel (marginaal); <0 = rood (verlies).">i</span></span><span class="v" id="l_thr">£900</span></div><input type="range" id="thr" min="0" max="2500" step="50" value="900"><div class="h">Groen ≥ drempel.</div></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span><label>Merk <span class="info" data-tip="Filter de lijst op automerk.">i</span></label><select id="f_make"></select></span>
+    <span><label>Btw <span class="info" data-tip="<b>Margin</b> = margeregeling: btw (20%) alleen over je winstmarge. <b>Qualifying</b> = btw-auto: btw over de hele prijs, inkoop-btw terugvorderbaar. Bron: BCA vat_type.">i</span></label><select id="f_vat"><option value="">alle</option><option>Margin</option><option>Qualifying</option></select></span>
+    <span><label>Alleen <span class="info" data-tip="Filter op uitkomst bij de huidige aannames: winstgevend (netto ≥ drempel), marginaal (0–drempel) of verlies (<0).">i</span></label><select id="f_verdict"><option value="">alle</option><option value="go">winstgevend</option><option value="marg">marginaal</option><option value="no">verlies</option></select></span>
+    <span style="margin-left:auto;color:var(--mut);font-size:11px" id="count"></span>
+  </div>
+
+  <div class="tblwrap">
+    <table id="tbl">
+      <thead><tr>
+        <th class="l" data-k="make">Auto <span class="info" data-tip="Merk, model en kenteken uit <b>deal_candidates</b> (BCA). Klik de rij voor het volledige dealmodel per auto.">i</span></th>
+        <th data-k="mi">Km <span class="info" data-tip="Kilometerstand uit BCA. Bepaalt samen met het kenteken de Autotrader-waardering (mileage-adjusted lookup).">i</span></th>
+        <th data-k="buy">Buy-now <span class="info" data-tip="BCA buy-now prijs — de directe inkoopprijs. Hard gegeven uit deal_candidates.">i</span></th>
+        <th data-k="anchor">AT-retail <span class="info" data-tip="Autotrader Retail Valuation via het portal (appraisal-vehicle-aggregate). <b>ADJ</b> = mileage+spec-adjusted. <b>MKT</b> = markt-gemiddelde, niet mileage-gecorrigeerd (adjusted-waarde niet geleverd).">i</span></th>
+        <th data-k="rating">Rating <span class="info" data-tip="Retail Rating 0-100 = <b>verkoopbaarheid</b> (aanbod vs vraag vs doorstroomsnelheid). Geen kwaliteits- of margecijfer. Bron: marketAverageValuation.atRetailRating.">i</span></th>
+        <th data-k="days">Days <span class="info" data-tip="Verwachte standtijd (dagen) op de AT-retailprijs. Bron: marketAverageValuation.daysToSell.">i</span></th>
+        <th data-k="recon">Recon <span class="info" data-tip="Geschatte herstelkosten = schaderegels × bedrag/regel + grade-penalty. <b>Placeholder</b> tot de recon-logica uit het condition report klaar is.">i</span></th>
+        <th data-k="net">Netto marge <span class="info" data-tip="Op de AT-retailprijs: <span class=form>AT-retail − buy-now − recon − vaste kosten − holding(days × €/dag) − btw</span>. Btw = margeregeling 1/6 van (retail − buy).">i</span></th>
+        <th data-k="pct">% <span class="info" data-tip="Netto marge als percentage van de buy-now prijs (ROI-indicatie).">i</span></th>
+        <th data-k="grade">Gr <span class="info" data-tip="BCA-conditiegrade uit het condition report: 1 (beste) t/m 4 (slechtste).">i</span></th>
+        <th data-k="dmg">Schade <span class="info" data-tip="Aantal schaderegels in het BCA condition report. Voedt de recon-schatting.">i</span></th>
+        <th data-k="score">Score <span class="info" data-tip="0-100, gewogen: <b>60% marge-signaal + 40% Retail Rating</b>. Weegt winst én verkoopbaarheid. Groen ≥62, geel ≥45, rood <45.">i</span></th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="note">AT-retail = Autotrader retail valuation (<span class="badge b-adj">ADJ</span> mileage+spec-adjusted / <span class="badge b-mkt">MKT</span> markt-gemiddelde). Rating = Retail Rating 0-100. Days = verwachte standtijd. Netto marge = AT-retail − buy-now − recon − vaste kosten − holding − btw. Klik een kolomkop om te sorteren.</div>
+</div>
+
+<!-- ============ DETAIL (opzet dealmodel-calculator.html) ============ -->
+<div id="detail" class="hidden">
+  <a class="back" onclick="showDash()">← terug naar portfolio</a>
+  <h1 id="d_title">—</h1>
+  <div class="sub" id="d_sub"></div>
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h3>Auto &amp; Autotrader-data</h3>
+        <div class="car" id="d_car"></div>
+        <div class="thumbs" id="d_thumbs"></div>
+        <div class="field" style="margin-bottom:0;margin-top:10px"><div class="h" id="d_curvehint"></div></div>
+      </div>
+      <div class="panel">
+        <h3>Vraagprijs (de lever) <span class="info" data-tip="De prijs waarvoor je op Autotrader adverteert. Bepaalt <b>price position</b> (prijs ÷ retail valuation), de <b>indicator</b> (Great/Good/Fair) én de <b>standtijd</b>: elke ~£110 hoger ≈ +1 dag.">i</span></h3>
+        <div class="field"><div class="top"><span>Vraagprijs op Autotrader</span><span class="v" id="dl_ask">—</span></div>
+          <input type="range" id="d_ask" min="0" max="1" step="50"><div class="h" id="d_askpos"></div></div>
+      </div>
+      <div class="panel">
+        <h3>Kosten — placeholders</h3>
+        <div class="field"><div class="top"><span>BCA buy-now <span class="info" data-tip="Directe inkoopprijs op de BCA-veiling. Hard gegeven uit deal_candidates.">i</span></span><span class="v" id="dl_buy">—</span></div><input type="range" id="d_buy" min="0" max="1" step="50"><div class="h">Hard uit deal_candidates.</div></div>
+        <div class="field"><div class="top"><span>Recon (schade) <span class="info" data-tip="Herstelkosten om verkoopklaar te maken. Startwaarde = schaderegels × bedrag + grade-penalty. <b>De doorslaggevende post</b> — wordt scherpgesteld met de recon-logica uit het condition report.">i</span></span><span class="v" id="dl_recon">—</span></div><input type="range" id="d_recon" min="0" max="3000" step="50"><div class="h warn">⏳ start = aanname; condition report volgt.</div></div>
+        <div class="field"><div class="top"><span>Buyer's fee (BCA) <span class="info" data-tip="Veilingkosten (BCA-staffel per hamerprijs). Placeholder tot de staffel bekend is.">i</span></span><span class="v" id="dl_fee">—</span></div><input type="range" id="d_fee" min="0" max="800" step="25"><div class="h warn">⏳ BCA-staffel.</div></div>
+        <div class="field"><div class="top"><span>Transport <span class="info" data-tip="Vervoer van veilinglocatie naar eigen locatie.">i</span></span><span class="v" id="dl_trans">—</span></div><input type="range" id="d_trans" min="0" max="500" step="25"></div>
+        <div class="field"><div class="top"><span>Prep / valet / MOT <span class="info" data-tip="Poetsen, kleine gereedmaak-kosten en eventueel nieuwe MOT (APK).">i</span></span><span class="v" id="dl_prep">—</span></div><input type="range" id="d_prep" min="0" max="700" step="25"></div>
+      </div>
+      <div class="panel">
+        <h3>Holding cost — twee componenten <span class="info" data-tip="Kosten van het aanhouden van voorraad, per dag standtijd. Langer staan kost <b>dubbel</b>: kapitaal/overhead én waardedaling.">i</span></h3>
+        <div class="field"><div class="top"><span>Kapitaal/overhead per dag <span class="info" data-tip="Rente op geïnvesteerd kapitaal + verzekering + stalling, per dag. Vermenigvuldigd met de standtijd.">i</span></span><span class="v" id="dl_cap">—</span></div><input type="range" id="d_cap" min="0" max="25" step="1"></div>
+        <div class="field"><div class="top"><span>Afschrijving per maand <span class="info" data-tip="Verwachte waardedaling van de auto terwijl hij te koop staat. Bron: <span class=form>trendedValuations.retail.plus30/60/90Days</span>. Omgerekend naar de standtijd.">i</span></span><span class="v" id="dl_dep">—</span></div><input type="range" id="d_dep" min="0" max="400" step="10"><div class="h">Uit <code style="color:var(--pur)">trendedValuations</code> (plus30/60/90).</div></div>
+        <div class="field"><div class="top"><span>Btw-model <span class="info" data-tip="<b>Marge</b>: btw = 1/6 van (verkoop − inkoop). <b>Standaard</b>: grof 1/6 over de verkoopprijs. <b>Geen</b>: btw buiten beschouwing. Kies op basis van vat_type.">i</span></span><span class="v" id="dl_vat">—</span></div><input type="range" id="d_vat" min="0" max="2" step="1"><div class="h" id="d_vathint"></div></div>
+        <div class="field"><div class="top"><span>Marge-drempel (go/no-go) <span class="info" data-tip="Grens voor het groen/geel/rood verdict. Netto marge ≥ drempel = winstgevend.">i</span></span><span class="v" id="dl_thr">—</span></div><input type="range" id="d_thr" min="0" max="2500" step="50"></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="verdict" id="d_verdict">—</div>
+        <div class="row3">
+          <div class="mini"><div class="lbl">Netto marge <span class="info" data-tip="Bij de huidige vraagprijs: bruto spread − alle kosten − holding − btw. De volledige opbouw staat in de regels hieronder.">i</span></div><div class="val" id="d_net">—</div></div>
+          <div class="mini"><div class="lbl">Verwachte standtijd <span class="info" data-tip="Dagen tot verkoop bij deze vraagprijs, afgeleid van de AT days-to-sell en de curve-helling (~£110/dag).">i</span></div><div class="val" id="d_days">—</div></div>
+          <div class="mini"><div class="lbl">ROI <span class="info" data-tip="Netto marge ÷ totaal geïnvesteerd (buy-now + recon + vaste kosten + holding).">i</span></div><div class="val" id="d_roi">—</div></div>
+        </div>
+        <div id="d_stack"></div>
+      </div>
+      <div class="panel">
+        <h3>confidenceOfSale — kans om binnen X dagen te verkopen <span class="info" data-tip="Autotrader-metric: kans dat de auto binnen een doel-aantal dagen verkoopt bij deze prijs. <b>MISSED</b> = onhaalbaar, <b>LOW/MEDIUM/HIGH</b> = oplopende kans. Bron: vehicle-metrics saleTarget → confidenceOfSale.">i</span></h3>
+        <div class="row3" id="d_conf"></div>
+        <div class="note">Gemodelleerd naar <code style="color:var(--pur)">POST /vehicle-metrics</code> met <code style="color:var(--pur)">saleTarget</code> → <b>confidenceOfSale</b>. Gevoed met de echte AT days-to-sell van deze auto.</div>
+      </div>
+      <div class="panel">
+        <h3>Prijs-scan: marge vs. standtijd vs. confidence <span class="info" data-tip="Dezelfde auto op verschillende vraagprijzen. Laat de kern-afruil zien: lagere prijs → sneller verkocht + hogere confidence, maar minder marge.">i</span></h3>
+        <table id="d_tbl">
+          <thead><tr><th class="l">Vraagprijs</th><th>Positie <span class="info" data-tip="Vraagprijs ÷ AT retail valuation. 100% = op de waardering.">i</span></th><th>Indicator <span class="info" data-tip="Autotrader-label o.b.v. price position: Great (~90-97%), Good (~97-101%), Fair (~101-108%). Consumenten filteren hierop.">i</span></th><th>Std.tijd</th><th>Netto marge</th><th>Conf. 45d <span class="info" data-tip="confidenceOfSale voor een 45-dagen horizon op deze prijs.">i</span></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="note" id="d_tblnote"></div>
+      </div>
+      <div class="panel">
+        <h3>Netto marge vs. vraagprijs</h3>
+        <canvas id="d_chart" width="720" height="200"></canvas>
+        <div class="note">Blauwe zone = betrouwbare Autotrader-band (~90–108% positie). Rood = buy-now, blauw = huidige vraagprijs, geel = drempel.</div>
+      </div>
+      <div class="panel">
+        <h3>API-mapping (waar elk getal vandaan komt)</h3>
+        <div class="apimap">
+          <b>Retail valuation / rating / days</b> · <code>GET /api/appraisal-vehicle-aggregate</code> → <code>adjustedValuation.retail</code> · <code>marketAverageValuation.atRetailRating</code> · <code>daysToSell</code><br>
+          <b>Vraagprijs → standtijd</b> · <code>POST /vehicle-metrics</code> <code>adverts.retailAdverts.price.amountGBP</code> → <code>daysToSell.value</code><br>
+          <b>Confidence per horizon</b> · zelfde call <code>saleTarget.targetDaysToSell[]</code> → <code>confidenceOfSale[].confidenceRating</code><br>
+          <b>Afschrijving (holding)</b> · <code>?trendedValuations=true</code> → <code>retail.plus30/60/90Days</code><br>
+          <b>Price-indicator grenzen</b> · <code>priceIndicatorRatingBands.{GREAT,GOOD,FAIR}.{from,to}</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- DATA: BCA + echte Autotrader (portal, 15-07-2026) ----------
+const DEALS=[
+{reg:"WT19 AWM",mk:"ALFA",t:"Giulia 2.0 TB 200 Super",yr:2019,mi:31780,fu:"Petrol",vt:"Margin",buy:10500,gr:1,dmg:4,img:12,at:{R:15560,src:"adj",days:34.3,rating:72,ind:"GOOD",sup:-1,dem:-1}},
+{reg:"YN69 GCF",mk:"ALFA",t:"Stelvio 2.0 200 AWD Super",yr:2019,mi:54500,fu:"Petrol",vt:"Margin",buy:10950,gr:3,dmg:15,img:15,at:{R:16060,src:"adj",days:48.3,rating:26.8,ind:"GOOD",sup:1.72,dem:1.4}},
+{reg:"LV69 UPM",mk:"AUDI",t:"Q2 1.5 35 TFSI S Line",yr:2019,mi:70927,fu:"Petrol",vt:"Margin",buy:10500,gr:3,dmg:14,img:16,at:{R:13488,src:"mkt",days:35.4,rating:64.7,ind:"GOOD",sup:0.07,dem:-0.01}},
+{reg:"WJ69 BXS",mk:"AUDI",t:"A3 Saloon 1.5 35 TFSI Sport",yr:2019,mi:47297,fu:"Petrol",vt:"Margin",buy:11150,gr:3,dmg:19,img:16,at:{R:14174,src:"mkt",days:35.1,rating:57.5,ind:"GOOD",sup:0.74,dem:0.4}},
+{reg:"VE71 XXV",mk:"AUDI",t:"A1 SB 2.0 40 TFSI S Line",yr:2022,mi:68974,fu:"Petrol",vt:"Margin",buy:13300,gr:3,dmg:10,img:15,at:{R:16208,src:"mkt",days:45.1,rating:58.3,ind:"GOOD",sup:-0.59,dem:-0.45}},
+{reg:"SL21 KHF",mk:"AUDI",t:"A1 SB 1.0 30 TFSI Sport",yr:2021,mi:26340,fu:"Petrol",vt:"Margin",buy:13700,gr:3,dmg:10,img:16,at:{R:16367,src:"mkt",days:31.8,rating:54.7,ind:"GOOD",sup:0.1,dem:-0.31}},
+{reg:"LP21 ZNA",mk:"AUDI",t:"A1 SB 1.0 30 TFSI Sport",yr:2021,mi:30317,fu:"Petrol",vt:"Margin",buy:13900,gr:3,dmg:18,img:17,at:{R:16084,src:"mkt",days:31.8,rating:54.7,ind:"GOOD",sup:0.1,dem:-0.31}},
+{reg:"VA21 MJF",mk:"AUDI",t:"Q3 1.5 35 TFSI Technik",yr:2021,mi:46674,fu:"Petrol",vt:"Margin",buy:14000,gr:2,dmg:9,img:14,at:{R:17763,src:"mkt",days:42.7,rating:44.8,ind:"GOOD",sup:-0.09,dem:-0.13}},
+{reg:"WU70 JEO",mk:"AUDI",t:"Q5 2.0 50 TFSIe Q S Line",yr:2020,mi:73819,fu:"PHEV",vt:"Margin",buy:14800,gr:1,dmg:6,img:13,at:{R:18877,src:"mkt",days:43.6,rating:32.7,ind:"GOOD",sup:-0.38,dem:-0.5}},
+{reg:"YD68 VYY",mk:"BMW",t:"2 Active Tourer 218i M Sport",yr:2018,mi:72373,fu:"Petrol",vt:"Margin",buy:6775,gr:3,dmg:16,img:15,at:{R:9975,src:"adj",days:48.4,rating:35.1,ind:"GOOD",sup:-0.48,dem:-0.46}},
+{reg:"NU68 FGF",mk:"BMW",t:"X1 sDrive 20i xLine",yr:2018,mi:65282,fu:"Petrol",vt:"Margin",buy:7800,gr:4,dmg:13,img:17,at:{R:13300,src:"adj",days:40.9,rating:43.2,ind:"GOOD",sup:-0.04,dem:-0.18}},
+{reg:"WK69 UJY",mk:"BMW",t:"2 Gran Tourer 218i Luxury",yr:2019,mi:42237,fu:"Petrol",vt:"Margin",buy:9600,gr:2,dmg:15,img:14,at:{R:13814,src:"adj",days:38.2,rating:51.1,ind:"GOOD",sup:-0.2,dem:-0.32}},
+{reg:"LD69 BKL",mk:"BMW",t:"218i M Sport Convertible",yr:2019,mi:63921,fu:"Petrol",vt:"Qualifying",buy:10800,gr:3,dmg:12,img:18,at:{R:13091,src:"adj",days:44.4,rating:39.9,ind:"GOOD",sup:0.45,dem:0.38}},
+{reg:"PL21 XNP",mk:"BMW",t:"330e SE Pro Saloon",yr:2021,mi:59768,fu:"PHEV",vt:"Qualifying",buy:12400,gr:3,dmg:13,img:15,at:{R:15203,src:"adj",days:30.3,rating:67.8,ind:"GOOD",sup:-0.18,dem:-0.41}},
+{reg:"PK20 NZF",mk:"BMW",t:"330e M Sport Saloon",yr:2020,mi:79963,fu:"PHEV",vt:"Margin",buy:12550,gr:2,dmg:9,img:14,at:{R:15347,src:"adj",days:29,rating:85.4,ind:"GREAT",sup:-0.24,dem:-0.25}},
+{reg:"LA69 ZGJ",mk:"BMW",t:"X1 sDrive 20i M Sport",yr:2020,mi:48699,fu:"Petrol",vt:"Qualifying",buy:14300,gr:2,dmg:10,img:12,at:{R:17337,src:"adj",days:52.5,rating:17.2,ind:"GREAT",sup:0.09,dem:-0.09}},
+{reg:"NL69 AKJ",mk:"BMW",t:"220i Sport Coupe",yr:2019,mi:29019,fu:"Petrol",vt:"Margin",buy:14350,gr:1,dmg:5,img:12,at:{R:16904,src:"adj",days:39.1,rating:70.5,ind:"GOOD",sup:0.75,dem:1.21}},
+{reg:"YE70 FMZ",mk:"BMW",t:"118i M Sport",yr:2020,mi:48215,fu:"Petrol",vt:"Margin",buy:15000,gr:3,dmg:9,img:27,at:{R:16398,src:"adj",days:39.2,rating:46.2,ind:"GOOD",sup:-0.14,dem:-0.29}},
+{reg:"SB70 PKY",mk:"BMW",t:"330e xDrive M Sport",yr:2021,mi:60658,fu:"PHEV",vt:"Margin",buy:15950,gr:3,dmg:16,img:15,at:{R:18902,src:"mkt",days:32.9,rating:68.4,ind:"GOOD",sup:-0.29,dem:-0.39}},
+{reg:"ST22 WNB",mk:"CITROEN",t:"C5 X 1.6 PHEV 225 Shine+",yr:2022,mi:9901,fu:"PHEV",vt:"Margin",buy:14800,gr:1,dmg:5,img:12,at:{R:18137,src:"mkt",days:37.5,rating:68.3,ind:"GOOD",sup:-0.01,dem:0.1}},
+{reg:"NH21 CZD",mk:"CUPRA",t:"Formentor 1.4 e-Hybrid V2",yr:2021,mi:58662,fu:"PHEV",vt:"Margin",buy:14500,gr:1,dmg:5,img:12,at:{R:16145,src:"mkt",days:31.1,rating:52.7,ind:"GOOD",sup:-0.07,dem:-0.46}},
+{reg:"NK24 YMY",mk:"DACIA",t:"Duster 1.3 TCe 150 Extreme",yr:2024,mi:36115,fu:"Petrol",vt:"Margin",buy:13400,gr:2,dmg:18,img:15,at:{R:15906,src:"mkt",days:30.8,rating:91.5,ind:"GOOD",sup:-0.14,dem:0.18}},
+{reg:"CJ23 MVW",mk:"DS",t:"DS 3 1.2 130 Perf Line+",yr:2023,mi:46962,fu:"Petrol",vt:"Qualifying",buy:9900,gr:4,dmg:17,img:17,at:{R:11715,src:"adj",days:48.7,rating:49.5,ind:"GOOD",sup:0.23,dem:0.66}},
+{reg:"BP23 ORG",mk:"DS",t:"DS 3 1.2 130 Perf Line+",yr:2023,mi:44360,fu:"Petrol",vt:"Qualifying",buy:10100,gr:3,dmg:20,img:15,at:{R:11939,src:"adj",days:48.7,rating:49.5,ind:"GOOD",sup:0.23,dem:0.66}},
+{reg:"CJ23 MUP",mk:"DS",t:"DS 3 1.2 130 Perf Line+",yr:2023,mi:42578,fu:"Petrol",vt:"Qualifying",buy:10100,gr:4,dmg:23,img:20,at:{R:12095,src:"adj",days:48.7,rating:49.5,ind:"GOOD",sup:0.23,dem:0.66}},
+{reg:"CJ23 MUA",mk:"DS",t:"DS 3 1.2 130 Perf Line+",yr:2023,mi:35362,fu:"Petrol",vt:"Qualifying",buy:10500,gr:4,dmg:13,img:15,at:{R:12746,src:"adj",days:48.7,rating:49.5,ind:"GOOD",sup:0.23,dem:0.66}},
+{reg:"MW23 YKZ",mk:"DS",t:"DS 4 1.2 130 Perf Line+",yr:2023,mi:43347,fu:"Petrol",vt:"Qualifying",buy:12400,gr:4,dmg:26,img:17,at:{R:14362,src:"adj",days:38.9,rating:57,ind:"GOOD",sup:1.17,dem:1.12}},
+{reg:"CJ23 NDE",mk:"DS",t:"DS 4 1.2 130 Perf Line+",yr:2023,mi:41999,fu:"Petrol",vt:"Qualifying",buy:12400,gr:4,dmg:13,img:18,at:{R:14452,src:"adj",days:38.9,rating:57,ind:"GOOD",sup:1.17,dem:1.12}},
+{reg:"CJ23 NDZ",mk:"DS",t:"DS 4 1.2 130 Perf Line+",yr:2023,mi:33924,fu:"Petrol",vt:"Qualifying",buy:12900,gr:4,dmg:14,img:18,at:{R:15004,src:"adj",days:38.9,rating:57,ind:"GOOD",sup:1.17,dem:1.12}},
+{reg:"CJ23 NDV",mk:"DS",t:"DS 4 1.2 130 Perf Line+",yr:2023,mi:29466,fu:"Petrol",vt:"Qualifying",buy:13300,gr:2,dmg:6,img:13,at:{R:15317,src:"adj",days:38.9,rating:57,ind:"GOOD",sup:1.17,dem:1.12}}
+];
+const IMG=d=>'https://www1.bcaimage.com/Document?DocType=VehicleImage&Reg='+d.reg.replace(' ','')+'-GB&grp=public&width=300';
+const gradeColor=g=>({1:'#3ecf8e',2:'#4da3ff',3:'#f0b429',4:'#f2545b'})[g]||'#8d99ab';
+const ratingColor=r=>r>=65?'#3ecf8e':r>=45?'#4da3ff':r>=30?'#f0b429':'#f2545b';
+const fmt=n=>'£'+Math.round(n).toLocaleString('nl-NL');
+const $=id=>document.getElementById(id);const v=id=>$(id).value;
+
+// ---------- DASHBOARD ----------
+let A={};
+function readAssume(){A={rp:+v('rp'),gp:+v('gp'),fx:+v('fx'),hd:+v('hd'),thr:+v('thr')};}
+function reconEst(d){let r=d.dmg*A.rp;if(A.gp)r+=({1:0,2:150,3:400,4:700})[d.gr]||0;return r;}
+function vatCost(model,sale,buy){const gp=Math.max(0,sale-buy);if(model==0)return 0;if(model==1)return gp/6;return sale/6;}
+function computeRow(d){
+  const R=d.at.R,recon=reconEst(d),days=d.at.days,holding=A.hd*days;
+  const vat=vatCost(1,R,d.buy);
+  const net=R-d.buy-recon-A.fx-holding-vat, pct=net/d.buy*100;
+  const verdict=net>=A.thr?'go':net>0?'marg':'no';
+  const marginScore=Math.max(0,Math.min(100,pct*4+30));
+  const score=0.6*marginScore+0.4*d.at.rating;
+  return {R,recon,days,holding,vat,net,pct,verdict,score};
+}
+let sortK='score',sortDir=-1;
+function renderDash(){
+  readAssume();
+  $('l_rp').textContent=fmt(A.rp);$('l_gp').textContent=A.gp?'aan':'uit';$('l_fx').textContent=fmt(A.fx);
+  $('l_hd').textContent=fmt(A.hd);$('l_thr').textContent=fmt(A.thr);
+  const fMake=v('f_make'),fVat=v('f_vat'),fVer=v('f_verdict');
+  let rows=DEALS.map(d=>({d,c:computeRow(d)})).filter(r=>(!fMake||r.d.mk===fMake)&&(!fVat||r.d.vt===fVat)&&(!fVer||r.c.verdict===fVer));
+  const go=rows.filter(r=>r.c.verdict==='go').length,marg=rows.filter(r=>r.c.verdict==='marg').length,no=rows.filter(r=>r.c.verdict==='no').length;
+  const totBuy=rows.reduce((s,r)=>s+r.d.buy,0),totNet=rows.reduce((s,r)=>s+r.c.net,0);
+  $('stats').innerHTML=`
+    <div class="stat"><b>${rows.length}</b><span>kandidaten</span></div>
+    <div class="stat g"><b>${go}</b><span>winstgevend</span></div>
+    <div class="stat a"><b>${marg}</b><span>marginaal</span></div>
+    <div class="stat r"><b>${no}</b><span>verlies</span></div>
+    <div class="stat"><b>${fmt(totBuy)}</b><span>totaal buy-now</span></div>
+    <div class="stat ${totNet>=0?'g':'r'}"><b>${fmt(totNet)}</b><span>totaal netto marge</span></div>`;
+  const kv={make:r=>r.d.mk+r.d.t,mi:r=>r.d.mi,buy:r=>r.d.buy,anchor:r=>r.c.R,rating:r=>r.d.at.rating,days:r=>r.d.at.days,
+    recon:r=>r.c.recon,net:r=>r.c.net,pct:r=>r.c.pct,grade:r=>-r.d.gr,dmg:r=>r.d.dmg,score:r=>r.c.score};
+  rows.sort((a,b)=>{const x=kv[sortK](a),y=kv[sortK](b);return (x<y?-1:x>y?1:0)*sortDir;});
+  $('tbl').querySelector('tbody').innerHTML=rows.map(r=>{const d=r.d,c=r.c;
+    const netCol=c.verdict==='go'?'var(--grn)':c.verdict==='marg'?'var(--amb)':'var(--red)';
+    const scoreCol=c.score>=62?'var(--grn)':c.score>=45?'var(--amb)':'var(--red)';
+    const rc=ratingColor(d.at.rating);
+    return `<tr onclick="openDeal('${d.reg}')">
+      <td class="l"><div class="car-t">${d.mk} ${d.t}</div><div class="car-s">${d.reg} · ${d.vt}</div></td>
+      <td>${d.mi.toLocaleString('nl-NL')}</td>
+      <td>${fmt(d.buy)}</td>
+      <td>${fmt(c.R)}<span class="badge ${d.at.src==='adj'?'b-adj':'b-mkt'}">${d.at.src==='adj'?'ADJ':'MKT'}</span></td>
+      <td><span class="ratewrap"><span style="color:${rc}">${Math.round(d.at.rating)}</span><span class="ratebar"><i style="width:${d.at.rating}%;background:${rc}"></i></span></span></td>
+      <td>${Math.round(d.at.days)}d</td>
+      <td>${fmt(c.recon)}</td>
+      <td style="color:${netCol};font-weight:600">${fmt(c.net)}</td>
+      <td style="color:${netCol}">${c.pct.toFixed(1)}%</td>
+      <td><span class="gradebadge" style="background:${gradeColor(d.gr)}22;color:${gradeColor(d.gr)}">${d.gr}</span></td>
+      <td>${d.dmg}</td>
+      <td><span style="color:${scoreCol};font-weight:600">${Math.round(c.score)}</span><span class="scorebar"><i style="width:${c.score}%;background:${scoreCol}"></i></span></td>
+    </tr>`;}).join('');
+  $('count').textContent=rows.length+' van 30';
+}
+[...new Set(DEALS.map(d=>d.mk))].sort().forEach(m=>{const o=document.createElement('option');o.textContent=m;$('f_make').appendChild(o);});
+$('f_make').insertAdjacentHTML('afterbegin','<option value="">alle merken</option>');
+['rp','gp','fx','hd','thr'].forEach(id=>$(id).addEventListener('input',renderDash));
+['f_make','f_vat','f_verdict'].forEach(id=>$(id).addEventListener('change',renderDash));
+document.querySelectorAll('#tbl th').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.k;if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=-1;}renderDash();}));
+
+// ---------- DETAIL (opzet dealmodel-calculator.html) ----------
+let CUR=null;
+function openDeal(reg){
+  CUR=DEALS.find(d=>d.reg===reg);readAssume();
+  const d=CUR,R=d.at.R;
+  $('dashboard').classList.add('hidden');$('detail').classList.remove('hidden');window.scrollTo(0,0);
+  $('d_title').textContent=d.mk+' '+d.t;
+  $('d_sub').innerHTML=`${d.reg} · ${d.yr} · ${d.mi.toLocaleString('nl-NL')} mi · ${d.fu} · ${d.vt} · <b style="color:var(--grn)">echte Autotrader-data</b>`;
+  const mc=d.at.dem-d.at.sup;
+  $('d_car').innerHTML=`<span class="m">Retail Valuation</span> <b>${fmt(R)}</b> <span class="badge ${d.at.src==='adj'?'b-adj':'b-mkt'}">${d.at.src==='adj'?'ADJ':'MKT'}</span>${d.at.src==='mkt'?' <span class="m">(markt-gem., niet mileage-adj.)</span>':''}<br>
+    <span class="m">Retail Rating</span> <b style="color:${ratingColor(d.at.rating)}">${Math.round(d.at.rating)}/100</b> · <span class="m">avg days to sell</span> <b>${Math.round(d.at.days)}</b><br>
+    <span class="m">Price indicator</span> <b>${d.at.ind}</b> · <span class="m">markt</span> <b>${mc>0.15?'hogere vraag':mc<-0.15?'lagere vraag':'neutraal'}</b><br>
+    <span class="m">grade</span> <b style="color:${gradeColor(d.gr)}">${d.gr}</b> · <span class="m">${d.dmg} schaderegels</span>`;
+  $('d_thumbs').innerHTML=[1,2,3,4].map(()=>`<img src="${IMG(d)}" onerror="this.style.display='none'">`).join('');
+  const k=Math.round(R/110);CUR._m={R,k,D0:d.at.days};
+  $('d_curvehint').innerHTML=`Gemeten curve-helling ≈ <b>£${k}/dag</b> · avg ${Math.round(d.at.days)}d @ ${fmt(R)}. Wordt live geleverd door <code style="color:var(--pur)">POST /vehicle-metrics</code>.`;
+  setR('d_buy',5000,18000,d.buy,'dl_buy',fmt);
+  setR('d_ask',Math.round(R*0.86),Math.round(R*1.14),Math.round(R),'dl_ask',fmt);
+  setR('d_recon',0,3000,reconEst(d),'dl_recon',fmt);
+  setR('d_fee',0,800,350,'dl_fee',fmt);
+  setR('d_trans',0,500,200,'dl_trans',fmt);
+  setR('d_prep',0,700,250,'dl_prep',fmt);
+  setR('d_cap',0,25,8,'dl_cap',fmt);
+  setR('d_dep',0,400,90,'dl_dep',fmt);
+  setR('d_vat',0,2,1,'dl_vat',x=>['Geen','Marge','Standaard'][x]);
+  setR('d_thr',0,2500,A.thr,'dl_thr',fmt);
+  ['d_ask','d_buy','d_recon','d_fee','d_trans','d_prep','d_cap','d_dep','d_vat','d_thr'].forEach(id=>$(id).oninput=renderDetail);
+  renderDetail();
+}
+function setR(id,min,max,val,lbl,f){const e=$(id);e.min=min;e.max=max;e.value=val;$(lbl).textContent=f(val);}
+function showDash(){$('detail').classList.add('hidden');$('dashboard').classList.remove('hidden');renderDash();}
+function daysForPrice(p){const m=CUR._m;return m.D0+(p-m.R)/m.k;}
+function confidence(T,D){if(D<=0)return['c-high','HIGH'];const r=T/D;if(r>=1.3)return['c-high','HIGH'];if(r>=1)return['c-med','MEDIUM'];if(r>=.78)return['c-low','LOW'];return['c-miss','MISSED'];}
+function indicator(p){const m=CUR._m,pos=p/m.R;if(pos<.90||pos>1.08)return['out','buiten band'];if(pos<.97)return['great','Great price'];if(pos<=1.01)return['good','Good price'];return['fair','Fair price'];}
+function gD(){return {ask:+v('d_ask'),buy:+v('d_buy'),recon:+v('d_recon'),fee:+v('d_fee'),trans:+v('d_trans'),prep:+v('d_prep'),cap:+v('d_cap'),dep:+v('d_dep'),vat:+v('d_vat'),thr:+v('d_thr')};}
+function holdingOf(g,d){return g.cap*d+g.dep*(d/30);}
+function netOf(g,sale,d){return sale-g.buy-(g.recon+g.fee+g.trans+g.prep)-holdingOf(g,d)-vatCost(g.vat,sale,g.buy);}
+function renderDetail(){
+  const g=gD();const vn=['Geen','Marge','Standaard'];
+  $('dl_ask').textContent=fmt(g.ask);$('dl_buy').textContent=fmt(g.buy);$('dl_recon').textContent=fmt(g.recon);
+  $('dl_fee').textContent=fmt(g.fee);$('dl_trans').textContent=fmt(g.trans);$('dl_prep').textContent=fmt(g.prep);
+  $('dl_cap').textContent=fmt(g.cap);$('dl_dep').textContent=fmt(g.dep);$('dl_thr').textContent=fmt(g.thr);
+  $('dl_vat').textContent=vn[g.vat];
+  $('d_vathint').textContent=['Geen btw meegerekend.','Margeregeling: 1/6 over de winstmarge.','Standaard-btw: grof 1/6 over verkoopprijs.'][g.vat];
+  const m=CUR._m,d=daysForPrice(g.ask),pos=g.ask/m.R,[ic,il]=indicator(g.ask),inBand=pos>=.90&&pos<=1.08;
+  const holding=holdingOf(g,d),vat=vatCost(g.vat,g.ask,g.buy),net=netOf(g,g.ask,d);
+  const invested=g.buy+g.recon+g.fee+g.trans+g.prep+holding,roi=net/invested*100;
+  $('d_askpos').innerHTML=`positie ${Math.round(pos*100)}% · ${il} · ${inBand?'~'+Math.round(d)+' dagen':'<span style="color:var(--amb)">buiten betrouwbare band</span>'}`;
+  $('d_net').textContent=fmt(net);$('d_net').style.color=net>=g.thr?'var(--grn)':net>0?'var(--amb)':'var(--red)';
+  $('d_days').textContent=inBand?Math.round(d)+'d':'n/a';$('d_roi').textContent=roi.toFixed(1)+'%';$('d_roi').style.color=$('d_net').style.color;
+  let best=null;for(let p=Math.ceil(m.R*.9/50)*50;p<=m.R*1.08;p+=50){const dd=daysForPrice(p),nn=netOf(g,p,dd);if(!best||nn>best.n)best={p,n:nn,d:dd};}
+  const ve=$('d_verdict');
+  if(net>=g.thr){ve.className='verdict go';ve.innerHTML=`✅ Winstgevend op deze prijs — ${fmt(net)} netto<small>Optimum £${best.p.toLocaleString('nl-NL')} → ${fmt(best.n)} (~${Math.round(best.d)} dagen).</small>`;}
+  else if(best.n>=g.thr){ve.className='verdict marg';ve.innerHTML=`⚠️ Op deze prijs onder je drempel, maar er is een betere prijs<small>Zet op £${best.p.toLocaleString('nl-NL')} → ${fmt(best.n)} netto (~${Math.round(best.d)} dagen).</small>`;}
+  else if(best.n>0){ve.className='verdict marg';ve.innerHTML=`⚠️ Marginaal — beste haalbare marge ${fmt(best.n)}<small>Onder drempel £${g.thr}. Recon is meestal de doorslag (placeholder).</small>`;}
+  else{ve.className='verdict no';ve.innerHTML=`❌ Geen winstgevende prijs binnen de band<small>Best mogelijk ${fmt(best.n)}. Verlaag recon/fees of loop weg.</small>`;}
+  $('d_stack').innerHTML=`
+    <div class="stackline">Vraagprijs <b>${fmt(g.ask)}</b></div>
+    <div class="stackline">− BCA buy-now <b>${fmt(g.buy)}</b></div>
+    <div class="stackline sub2">= Bruto spread <b>${fmt(g.ask-g.buy)}</b></div>
+    <div class="stackline">− Recon <b>${fmt(g.recon)}</b></div>
+    <div class="stackline">− Buyer's fee <b>${fmt(g.fee)}</b></div>
+    <div class="stackline">− Transport / Prep <b>${fmt(g.trans+g.prep)}</b></div>
+    <div class="stackline">− Holding (${Math.round(d)}d: kapitaal ${fmt(g.cap*d)} + afschr. ${fmt(g.dep*d/30)}) <b>${fmt(holding)}</b></div>
+    <div class="stackline">− Btw (${vn[g.vat]}) <b>${fmt(vat)}</b></div>
+    <div class="stackline tot">= Netto marge <b style="color:${net>=g.thr?'var(--grn)':net>0?'var(--amb)':'var(--red)'}">${fmt(net)}</b></div>`;
+  $('d_conf').innerHTML=[30,45,60].map(T=>{const[cc,cl]=inBand?confidence(T,d):['c-out','—'];
+    return `<div class="mini"><div class="lbl">binnen ${T} dagen</div><div style="margin-top:6px"><span class="pill ${cc}">${cl}</span></div></div>`;}).join('');
+  // prijs-scan
+  const prices=[];for(let p=Math.round(m.R*.92/100)*100;p<=m.R*1.08;p+=Math.round(m.R*.02/50)*50)prices.push(p);
+  const uniq=[...new Set([...prices,g.ask])].sort((a,b)=>a-b);
+  $('d_tbl').querySelector('tbody').innerHTML=uniq.map(p=>{const dd=daysForPrice(p),ps=p/m.R,[ic,il]=indicator(p),nn=netOf(g,p,dd);
+    const ib=ps>=.90&&ps<=1.08;const[cc,cl]=ib?confidence(45,dd):['c-out','—'];
+    const pill=ic==='great'?'p-great':ic==='good'?'p-good':ic==='fair'?'p-fair':'p-out';
+    const col=nn>=g.thr?'var(--grn)':nn>0?'var(--amb)':'var(--red)';
+    return `<tr${p===g.ask?' style="background:rgba(77,163,255,.10)"':''}><td class="l">${fmt(p)}</td><td>${Math.round(ps*100)}%</td>
+      <td><span class="pill ${pill}">${il}</span></td><td>${ib?Math.round(dd)+'d':'n/a'}</td>
+      <td style="color:${col};font-weight:600">${fmt(nn)}</td><td><span class="pill ${cc}">${cl}</span></td></tr>`;}).join('');
+  $('d_tblnote').innerHTML='Confidence hier voor een <b>45-dagen</b> horizon. Sneller verkopen (30d) vraagt een lagere prijs → meer confidence, minder marge. Dat is de kern-afruil.';
+  drawChart(g);
+}
+function drawChart(g){
+  const cv=$('d_chart'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,m=CUR._m;ctx.clearRect(0,0,W,H);
+  const pMin=m.R*.86,pMax=m.R*1.14,nAt=p=>netOf(g,p,daysForPrice(p));
+  let nMin=1e9,nMax=-1e9;for(let p=pMin;p<=pMax;p+=20){const n=nAt(p);if(n<nMin)nMin=n;if(n>nMax)nMax=n;}nMin=Math.min(nMin,-200);nMax=Math.max(nMax,200);
+  const x=p=>44+(p-pMin)/(pMax-pMin)*(W-60),y=n=>H-24-(n-nMin)/(nMax-nMin)*(H-40);
+  ctx.fillStyle='rgba(77,163,255,.08)';ctx.fillRect(x(m.R*.9),8,x(m.R*1.08)-x(m.R*.9),H-32);
+  ctx.strokeStyle='#2a323f';ctx.beginPath();ctx.moveTo(44,y(0));ctx.lineTo(W-16,y(0));ctx.stroke();
+  ctx.fillStyle='#8d99ab';ctx.font='10px sans-serif';ctx.fillText('£0',8,y(0)+3);
+  ctx.strokeStyle='rgba(240,180,41,.5)';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(44,y(g.thr));ctx.lineTo(W-16,y(g.thr));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#f0b429';ctx.fillText('drempel',W-56,y(g.thr)-4);
+  ctx.strokeStyle='#3ecf8e';ctx.lineWidth=2;ctx.beginPath();let f=1;for(let p=pMin;p<=pMax;p+=10){const px=x(p),py=y(nAt(p));if(f){ctx.moveTo(px,py);f=0}else ctx.lineTo(px,py)}ctx.stroke();
+  ctx.strokeStyle='#f2545b';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(x(g.buy),8);ctx.lineTo(x(g.buy),H-24);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#f2545b';ctx.fillText('buy-now',x(g.buy)-16,H-11);
+  ctx.strokeStyle='#4da3ff';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x(g.ask),8);ctx.lineTo(x(g.ask),H-24);ctx.stroke();ctx.fillStyle='#4da3ff';ctx.fillText('vraag',x(g.ask)-10,14);
+}
+// ---------- info tooltips ----------
+(function(){
+  const tip=document.getElementById('tip');
+  function place(el){
+    tip.classList.add('show');
+    const r=el.getBoundingClientRect();
+    tip.style.left='0px';tip.style.top='0px';
+    const tr=tip.getBoundingClientRect();
+    let x=r.left+r.width/2-tr.width/2, y=r.bottom+8;
+    if(y+tr.height>innerHeight-8) y=r.top-tr.height-8;      // flip boven
+    x=Math.max(8,Math.min(x,innerWidth-tr.width-8));
+    tip.style.left=x+'px';tip.style.top=Math.max(8,y)+'px';
+  }
+  document.addEventListener('mouseover',e=>{const el=e.target.closest('.info');if(!el)return;tip.innerHTML=el.getAttribute('data-tip');place(el);});
+  document.addEventListener('mouseout',e=>{const el=e.target.closest('.info');if(!el)return;tip.classList.remove('show');});
+  // tap-support (mobiel): toggle op klik
+  document.addEventListener('click',e=>{const el=e.target.closest('.info');if(!el){tip.classList.remove('show');return;}e.stopPropagation();if(tip.classList.contains('show')&&tip._src===el){tip.classList.remove('show');tip._src=null;}else{tip.innerHTML=el.getAttribute('data-tip');place(el);tip._src=el;}});
+})();
+
+renderDash();
+</script>
+</body>
+</html>
